@@ -96,6 +96,24 @@
       background: radial-gradient(circle at 50% 20%, rgba(72,214,255,.18), transparent 60%);
       pointer-events:none;
     }
+	.btnGrid{
+	  display:grid;
+	  grid-template-columns: repeat(2, minmax(0, 1fr));
+	  gap:10px;
+	}
+	@media (min-width: 980px){
+	  .btnGrid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+	}
+	.btn.compact{
+	  min-width:0 !important;
+	  width:100%;
+	  padding:10px 12px;
+	}
+	.bullets{
+	  margin:10px 0 0 18px;
+	}
+	.bullets li{ margin:6px 0; }
+
     .brand{
       display:flex;
       gap:12px;
@@ -1633,6 +1651,7 @@
       { id: "jobs", name: "Jobs", icon: "M7 7h10M7 12h10M7 17h10M4 7h.01M4 12h.01M4 17h.01" },
       { id: "imperium", name: "Imperium", icon: "M12 3l8 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8l8-5Z" },
       { id: "stats", name: "Stats", icon: "M4 19V5M4 19h16M8 15l2-3 3 2 3-6" },
+	  { id: "howto", name: "How to Play", icon: "M12 6v6l4 2M8 6h8M8 10h8M8 14h5" },
     ];
     const IMPERIUM_TABS = [
       { id: "training", name: "Training" },
@@ -1765,148 +1784,162 @@
       };
       return map[id] || "A job in the dark city.";
     }
+	
+	
     function renderDashboard(root) {
-      renderPageHeader("Dashboard", "Your city. Your rules. Manage momentum and minimize heat spikes.");
-      const weapon = getEquippedWeapon();
-      const activeBonuses = getActiveBonuses();
-      root.innerHTML = `
-        <div class="grid">
-          <div class="card col8">
-            <h3>Empire Snapshot</h3>
-            <div class="twoCol">
-              <div class="col6">
-                <div class="chipRow">
-                  <span class="chip">Combat Power: <span class="mono" data-bind="combatPower" data-format="int"></span></span>
-                  <span class="chip">Crew Slots: <span class="mono" data-bind="crewSlots" data-format="int"></span></span>
-                  <span class="chip">Influence: <span class="mono" data-bind="influence" data-format="int"></span></span>
-                  <span class="chip">Upkeep/min: <span class="mono" data-bind="upkeepPerMin" data-format="money"></span></span>
-                </div>
-                <div class="divider"></div>
-                <div class="small">
-                  <div>Job Payout Bonus: <span class="mono" data-bind="moneyMult" data-format="pct"></span></div>
-                  <div>Rep Gain Bonus: <span class="mono" data-bind="repMult" data-format="pct"></span></div>
-                  <div>Heat Gain Mod: <span class="mono" data-bind="heatGainMult" data-format="signedPct"></span></div>
-                  <div>Heat Control Bonus: <span class="mono">+<span data-bind="heatReduceMult" data-format="pct"></span></span></div>
-                  <div>Passive Income/min: <span class="mono" data-bind="passivePerMin" data-format="money"></span></div>
-                  <div>Heat Pressure: <span class="mono" data-bind="heatPressure" data-format="pct"></span></div>
-                </div>
-              </div>
-              <div class="col6">
-                <div class="small">Equipped Weapon</div>
-                <div class="item" style="margin-top:10px">
-                  <div class="left">
-                    <div class="badge">${icon("M14 7l-9 9M8 8l8 8M16 4l4 4")}</div>
-                    <div>
-                      <h4>${weapon ? escapeHtml(weapon.name) : "None equipped"}</h4>
-                      <div class="desc">${weapon ? escapeHtml(weapon.desc) : "Buy a weapon in Market or equip one you own."}</div>
-                      ${weapon ? `<div class="metaLine"><span>Power +${fmt.format(weapon.power)}</span></div>` : ""}
-                    </div>
-                  </div>
-                  <div class="actions">
-                    <button class="btn secondary" id="goWeapons">Open Weapons</button>
-                  </div>
-                </div>
-                <div class="divider"></div>
-                <div class="small">Active Bonuses</div>
-                <div style="margin-top:10px">
-                  ${activeBonuses.length ? activeBonuses.map(b => `
-                    <div class="item" style="margin-bottom:10px">
-                      <div class="left">
-                        <div class="badge">${icon("M12 21s-8-4.5-8-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 6.5-8 11-8 11Z")}</div>
-                        <div>
-                          <h4>${escapeHtml(b.name)}</h4>
-                          <div class="desc">
-                            Expires in <span class="mono" data-countdown-ends="${b.endsAt}">${secondsToHMS((b.endsAt - now())/1000)}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="actions">
-                        <button class="btn secondary" data-expire="${b.id}">Dismiss</button>
-                      </div>
-                    </div>
-                  `).join("") : `
-                    <div class="small muted">No active bonuses. Grab consumables in Market.</div>
-                  `}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="card col4">
-            <h3>Quick Actions</h3>
-            <div class="items">
-              <div class="item" style="grid-column:span 12">
-                <div class="left">
-                  <div class="badge">${icon("M7 7h10M7 12h10M7 17h10M4 7h.01M4 12h.01M4 17h.01")}</div>
-                  <div>
-                    <h4>Run a job</h4>
-                    <div class="desc">Build cash and rep. Watch heat.</div>
-                  </div>
-                </div>
-                <div class="actions">
-                  <button class="btn" id="goJobs">Go to Jobs</button>
-                </div>
-              </div>
-              <div class="item" style="grid-column:span 12">
-                <div class="left">
-                  <div class="badge">${icon("M9 17l6-6m-7 1 1-7 7-1-1 7-7 1Z")}</div>
-                  <div>
-                    <h4>Cool the heat</h4>
-                    <div class="desc">Reduce heat to prevent backlash.</div>
-                  </div>
-                </div>
-                <div class="actions">
-                  <button class="btn danger" id="goHeat">Heat Control</button>
-                </div>
-              </div>
-              <div class="item" style="grid-column:span 12">
-                <div class="left">
-                  <div class="badge">${icon("M12 3l8 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8l8-5Z")}</div>
-                  <div>
-                    <h4>Upgrade hideout</h4>
-                    <div class="desc">Increase passive income & multipliers.</div>
-                  </div>
-                </div>
-                <div class="actions">
-                  <button class="btn good" id="goHideout">Hideout</button>
-                </div>
-              </div>
-              <div class="item" style="grid-column:span 12">
-                <div class="left">
-                  <div class="badge">${icon("M4 19V5M4 19h16M8 15l2-3 3 2 3-6")}</div>
-                  <div>
-                    <h4>View full stats</h4>
-                    <div class="desc">Combat, economy, crew, bonuses.</div>
-                  </div>
-                </div>
-                <div class="actions">
-                  <button class="btn secondary" id="goStats">Stats</button>
-                </div>
-              </div>
-            </div>
-            <div class="divider"></div>
-            <button class="btn secondary" id="resetBtn">Reset Save</button>
-          </div>
-          <div class="card col12">
-            <h3>Current Action</h3>
-            ${renderActionPanelHTML()}
-          </div>
-        </div>
-      `;
-      root.querySelector("#goJobs").onclick = () => setPage("jobs");
-      root.querySelector("#goHeat").onclick = () => { setPage("imperium"); setImperiumTab("heat"); };
-      root.querySelector("#goHideout").onclick = () => { setPage("imperium"); setImperiumTab("hideout"); };
-      root.querySelector("#goWeapons").onclick = () => { setPage("imperium"); setImperiumTab("weapons"); };
-      root.querySelector("#goStats").onclick = () => setPage("stats");
-      root.querySelector("#resetBtn").onclick = () => hardReset();
-      root.querySelectorAll("button[data-expire]").forEach(btn => {
-        btn.onclick = () => {
-          state.bonuses = state.bonuses.filter(b => b.id !== btn.dataset.expire);
-          saveState();
-          renderAll();
-        };
-      });
-      bindActionPanel(root);
-    }
+	  renderPageHeader("Dashboard", "Your city. Your rules. Manage momentum and minimize heat spikes.");
+
+	  const weapon = getEquippedWeapon();
+	  const activeBonuses = getActiveBonuses();
+
+	  // Build a “recommended jobs” preview without forcing any new engine logic.
+	  const mods = getCombinedMods?.() ?? { moneyMult: 0, repMult: 0, heatGainMult: 0, jobSpeed: 0 };
+
+	  const unlockedJobs = [];
+	  try {
+		for (const g of (JOB_GROUPS ?? [])) {
+		  const reqRep = g.unlock?.rep ?? 0;
+		  if (state.rep < reqRep) continue;
+		  for (const j of (g.jobs ?? [])) unlockedJobs.push({ group: g, job: j });
+		}
+	  } catch {}
+
+	  function scoreJob(entry, kind) {
+		const j = entry.job;
+		const secBase = j.sec ?? 10;
+		const sec = Math.max(3, Math.round(secBase / (1 + (mods.jobSpeed || 0))));
+		const money = (j.money ?? 0) * (1 + (mods.moneyMult || 0));
+		const rep = (j.rep ?? 0) * (1 + (mods.repMult || 0));
+		return kind === "money" ? (money / sec) : (rep / sec);
+	  }
+
+	  let bestMoney = null;
+	  let bestRep = null;
+	  for (const e of unlockedJobs) {
+		if (!bestMoney || scoreJob(e, "money") > scoreJob(bestMoney, "money")) bestMoney = e;
+		if (!bestRep || scoreJob(e, "rep") > scoreJob(bestRep, "rep")) bestRep = e;
+	  }
+
+	  // Next unlock (job tier)
+	  let nextTier = null;
+	  try {
+		const locked = (JOB_GROUPS ?? [])
+		  .filter(g => (g.unlock?.rep ?? 0) > state.rep)
+		  .sort((a, b) => (a.unlock.rep ?? 0) - (b.unlock.rep ?? 0));
+		nextTier = locked[0] ?? null;
+	  } catch {}
+
+	  const heatBand =
+		state.heat >= 85 ? { label: "CRITICAL", cls: "dangerTxt" } :
+		state.heat >= 55 ? { label: "HOT", cls: "warnTxt" } :
+		state.heat >= 25 ? { label: "WARM", cls: "" } :
+		{ label: "COLD", cls: "goodTxt" };
+
+	  root.innerHTML = `
+		<div class="grid">
+		  <div class="card col8">
+			<h3>Empire Snapshot</h3>
+			<div class="desc">Your current standing. Keep cashflow up and heat under control.</div>
+
+			<div class="hr"></div>
+
+			<div class="kpis">
+			  <div class="kpi">
+				<div class="label">Cash</div>
+				<div class="value mono" data-bind="money"></div>
+			  </div>
+			  <div class="kpi">
+				<div class="label">Rep</div>
+				<div class="value mono" data-bind="rep"></div>
+			  </div>
+			  <div class="kpi">
+				<div class="label">Heat</div>
+				<div class="value mono ${heatBand.cls}" data-bind="heat"></div>
+				<div class="desc" style="margin-top:6px">Status: <b class="${heatBand.cls}">${heatBand.label}</b></div>
+			  </div>
+			  <div class="kpi">
+				<div class="label">Power</div>
+				<div class="value mono" data-bind="power"></div>
+			  </div>
+			</div>
+
+			<div class="hr"></div>
+
+			<h3 style="margin-top:0">Quick Jumps</h3>
+			<div class="btnGrid">
+			  <button class="btn compact" id="dashGoJobs">Jobs</button>
+			  <button class="btn secondary compact" id="dashGoTrain">Training</button>
+			  <button class="btn secondary compact" id="dashGoHideout">Hideout</button>
+			  <button class="btn secondary compact" id="dashGoCrew">Crew</button>
+			  <button class="btn secondary compact" id="dashGoWeapons">Weapons</button>
+			  <button class="btn secondary compact" id="dashGoHeat">Heat Control</button>
+			  <button class="btn secondary compact" id="dashGoMarket">Market</button>
+			  <button class="btn compact" id="dashGoHowto">How to Play</button>
+			</div>
+
+			<div class="hr"></div>
+
+			<h3 style="margin-top:0">Recommended Next Moves</h3>
+			<div class="grid" style="margin-top:10px">
+			  <div class="card col6" style="margin:0">
+				<h4>Best Money Job (right now)</h4>
+				<div class="desc">${bestMoney ? `${escapeHtml(bestMoney.group.name)} • <b>${escapeHtml(bestMoney.job.name)}</b>` : "No jobs unlocked yet."}</div>
+			  </div>
+			  <div class="card col6" style="margin:0">
+				<h4>Best Rep Job (right now)</h4>
+				<div class="desc">${bestRep ? `${escapeHtml(bestRep.group.name)} • <b>${escapeHtml(bestRep.job.name)}</b>` : "No jobs unlocked yet."}</div>
+			  </div>
+			  <div class="card col12" style="margin:0">
+				<h4>Next Unlock</h4>
+				<div class="desc">${
+				  nextTier
+					? `Next tier: <b>${escapeHtml(nextTier.name)}</b> at <span class="mono">${fmtInt(nextTier.unlock.rep)}</span> Rep — you need <span class="mono">${fmtInt(nextTier.unlock.rep - state.rep)}</span> more.`
+					: "You’ve unlocked all current job tiers."
+				}</div>
+			  </div>
+			</div>
+		  </div>
+
+		  <div class="card col4">
+			<h3>Loadout</h3>
+			<div class="desc">${weapon ? `Equipped: <b>${escapeHtml(weapon.name)}</b>` : "No weapon equipped yet."}</div>
+
+			<div class="hr"></div>
+
+			<h3>Bonuses</h3>
+			<div class="desc">
+			  ${activeBonuses.length ? `${activeBonuses.length} active bonus(es) running.` : "No active bonuses."}
+			</div>
+
+			<div class="hr"></div>
+
+			<h3>Modifiers</h3>
+			<table class="table">
+			  <tbody>
+				<tr><td>Money bonus</td><td class="right mono">+${Math.round((mods.moneyMult || 0) * 100)}%</td></tr>
+				<tr><td>Rep bonus</td><td class="right mono">+${Math.round((mods.repMult || 0) * 100)}%</td></tr>
+				<tr><td>Heat gain</td><td class="right mono">${Math.round((mods.heatGainMult || 0) * 100)}%</td></tr>
+				<tr><td>Job speed</td><td class="right mono">+${Math.round((mods.jobSpeed || 0) * 100)}%</td></tr>
+			  </tbody>
+			</table>
+		  </div>
+		</div>
+	  `;
+
+	  document.getElementById("dashGoJobs")?.addEventListener("click", () => setPage("jobs"));
+	  document.getElementById("dashGoTrain")?.addEventListener("click", () => { setPage("imperium"); setImperiumTab("training"); });
+	  document.getElementById("dashGoHideout")?.addEventListener("click", () => { setPage("imperium"); setImperiumTab("hideout"); });
+	  document.getElementById("dashGoCrew")?.addEventListener("click", () => { setPage("imperium"); setImperiumTab("crew"); });
+	  document.getElementById("dashGoWeapons")?.addEventListener("click", () => { setPage("imperium"); setImperiumTab("weapons"); });
+	  document.getElementById("dashGoHeat")?.addEventListener("click", () => { setPage("imperium"); setImperiumTab("heat"); });
+	  document.getElementById("dashGoMarket")?.addEventListener("click", () => { setPage("imperium"); setImperiumTab("market"); });
+	  document.getElementById("dashGoHowto")?.addEventListener("click", () => setPage("howto"));
+
+	  registerBindings(root);
+	}
+
+	
+	
     function renderJobItem(job, groupLocked, mods) {
       const locked = groupLocked || state.rep < (job.req?.rep ?? 0) || isJailed();
       const speed = 1 + (mods.jobSpeed || 0);
@@ -2787,6 +2820,122 @@
       `;
       registerBindings(root);
     }
+	function renderHowTo(root) {
+	  renderPageHeader("How to Play", "Build quietly. Strike decisively. Own the city.");
+
+	  root.innerHTML = `
+		<div class="grid guide">
+		  <div class="card col8">
+			<h3>Quick Start</h3>
+			<div class="desc">A clean loop: run Jobs → train skills → upgrade Hideout → manage Heat → reinvest.</div>
+
+			<div class="hr"></div>
+
+			<div class="guideList">
+			  <div class="item">
+				<div class="left">
+				  <div class="badge">${icon("M12 20l9-5-9-5-9 5 9 5Z")}</div>
+				  <div style="min-width:0">
+					<h4>1) Run Jobs</h4>
+					<div class="desc">Earn <b>Cash</b>, <b>Rep</b>, and <b>Heat</b>. Rep unlocks stronger tiers.</div>
+				  </div>
+				</div>
+			  </div>
+
+			  <div class="item">
+				<div class="left">
+				  <div class="badge">${icon("M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2")}</div>
+				  <div style="min-width:0">
+					<h4>2) Train in Imperium</h4>
+					<div class="desc">Train to scale your empire: money %, power, stealth, rep gain, heat control, and more.</div>
+				  </div>
+				</div>
+			  </div>
+
+			  <div class="item">
+				<div class="left">
+				  <div class="badge">${icon("M3 10h18M7 15h10M7 5h10")}</div>
+				  <div style="min-width:0">
+					<h4>3) Upgrade Hideout</h4>
+					<div class="desc">Higher hideout levels boost your earnings and unlock long-term scaling.</div>
+				  </div>
+				</div>
+			  </div>
+
+			  <div class="item">
+				<div class="left">
+				  <div class="badge">${icon("M12 2l3 7h7l-5.5 4.1L18 21l-6-3.8L6 21l1.5-7.9L2 9h7l3-7Z")}</div>
+				  <div style="min-width:0">
+					<h4>4) Gear + Market</h4>
+					<div class="desc">Weapons and items give big spikes in performance. Market stock can rotate.</div>
+				  </div>
+				</div>
+			  </div>
+
+			  <div class="item">
+				<div class="left">
+				  <div class="badge">${icon("M12 6v6l4 2")}</div>
+				  <div style="min-width:0">
+					<h4>5) Manage Heat</h4>
+					<div class="desc">High heat increases risk. Use Heat Control actions + stealth-focused play to stay free.</div>
+				  </div>
+				</div>
+			  </div>
+			</div>
+
+			<div class="hr"></div>
+
+			<h3 style="margin-top:0">Controls</h3>
+			<div class="desc">
+			  <span class="mono">J</span> Jobs •
+			  <span class="mono">K</span> Imperium (Crew) •
+			  <span class="mono">L</span> Imperium (Heat) •
+			  <span class="mono">;</span> Stats •
+			  <span class="mono">H</span> How to Play •
+			  <span class="mono">Esc</span> Cancel Action
+			</div>
+
+			<div class="hr"></div>
+
+			<div class="btnRow">
+			  <button class="btn" id="howtoGoJobs">Go to Jobs</button>
+			  <button class="btn secondary" id="howtoGoTrain">Go to Training</button>
+			  <button class="btn secondary" id="howtoGoHideout">Go to Hideout</button>
+			  <button class="btn secondary" id="howtoGoHeat">Go to Heat Control</button>
+			</div>
+		  </div>
+
+		  <div class="card col4">
+			<h3>Strategy Notes</h3>
+			<div class="desc">
+			  <ul class="bullets">
+				<li><b>Rep</b> is your access key. Push it early.</li>
+				<li><b>Heat</b> is the tax. Keep it controlled or you’ll lose tempo.</li>
+				<li>Upgrade <b>Hideout</b> steadily for long-run scaling.</li>
+				<li>Use <b>Market</b> buys to break through walls (speed/earnings/power).</li>
+			  </ul>
+			</div>
+
+			<div class="hr"></div>
+
+			<h3>What’s “Power”?</h3>
+			<div class="desc">Power is your overall capability: combat potential + intimidation + efficiency. It’s influenced by skills, gear, and crew.</div>
+
+			<div class="hr"></div>
+
+			<h3>When do I “win”?</h3>
+			<div class="desc">This is an idle empire ladder. Your win condition is: <b>higher power, bigger cashflow, cleaner heat management</b>, and eventually prestige (future expansion).</div>
+		  </div>
+		</div>
+	  `;
+
+	  document.getElementById("howtoGoJobs")?.addEventListener("click", () => setPage("jobs"));
+	  document.getElementById("howtoGoTrain")?.addEventListener("click", () => { setPage("imperium"); setImperiumTab("training"); });
+	  document.getElementById("howtoGoHideout")?.addEventListener("click", () => { setPage("imperium"); setImperiumTab("hideout"); });
+	  document.getElementById("howtoGoHeat")?.addEventListener("click", () => { setPage("imperium"); setImperiumTab("heat"); });
+
+	  registerBindings(root);
+	}
     function renderAll() {
       renderNav();
       renderHud();
@@ -2797,6 +2946,7 @@
       if (state.ui.page === "jobs") renderJobs(root);
       if (state.ui.page === "imperium") renderImperium(root);
       if (state.ui.page === "stats") renderStats(root);
+	  if (state.ui.page === "howto") renderHowTo(root);
       const ss = document.getElementById("saveState");
       if (ss) ss.textContent = "Auto";
       const as = document.getElementById("actionState");
@@ -2815,6 +2965,7 @@
       if (k === "k") { setPage("imperium"); setImperiumTab("crew"); }
       if (k === "l") { setPage("imperium"); setImperiumTab("heat"); }
       if (k === ";") setPage("stats");
+	  if (k === "h") setPage("howto");
       if (k === "escape" && state.action) cancelAction();
     });
     // ---------- Init ----------
