@@ -1789,12 +1789,11 @@
     function renderDashboard(root) {
 	  renderPageHeader("Dashboard", "Your city. Your rules. Manage momentum and minimize heat spikes.");
 
-	  const weapon = getEquippedWeapon();
-	  const activeBonuses = getActiveBonuses();
+	  const mods = (typeof getCombinedMods === "function")
+		? getCombinedMods()
+		: { moneyMult: 0, repMult: 0, heatGainMult: 0, jobSpeed: 0 };
 
-	  // Build a “recommended jobs” preview without forcing any new engine logic.
-	  const mods = getCombinedMods?.() ?? { moneyMult: 0, repMult: 0, heatGainMult: 0, jobSpeed: 0 };
-
+	  // Unlocked jobs for “best next move”
 	  const unlockedJobs = [];
 	  try {
 		for (const g of (JOB_GROUPS ?? [])) {
@@ -1825,7 +1824,7 @@
 	  try {
 		const locked = (JOB_GROUPS ?? [])
 		  .filter(g => (g.unlock?.rep ?? 0) > state.rep)
-		  .sort((a, b) => (a.unlock.rep ?? 0) - (b.unlock.rep ?? 0));
+		  .sort((a, b) => (a.unlock?.rep ?? 0) - (b.unlock?.rep ?? 0));
 		nextTier = locked[0] ?? null;
 	  } catch {}
 
@@ -1846,20 +1845,20 @@
 			<div class="kpis">
 			  <div class="kpi">
 				<div class="label">Cash</div>
-				<div class="value mono" data-bind="money"></div>
+				<div class="value mono" data-bind="money" data-format="money"></div>
 			  </div>
 			  <div class="kpi">
 				<div class="label">Rep</div>
-				<div class="value mono" data-bind="rep"></div>
+				<div class="value mono" data-bind="rep" data-format="int"></div>
 			  </div>
 			  <div class="kpi">
 				<div class="label">Heat</div>
-				<div class="value mono ${heatBand.cls}" data-bind="heat"></div>
+				<div class="value mono ${heatBand.cls}" data-bind="heat" data-format="float1"></div>
 				<div class="desc" style="margin-top:6px">Status: <b class="${heatBand.cls}">${heatBand.label}</b></div>
 			  </div>
 			  <div class="kpi">
 				<div class="label">Power</div>
-				<div class="value mono" data-bind="power"></div>
+				<div class="value mono" data-bind="power" data-format="int"></div>
 			  </div>
 			</div>
 
@@ -1883,43 +1882,41 @@
 			<div class="grid" style="margin-top:10px">
 			  <div class="card col6" style="margin:0">
 				<h4>Best Money Job (right now)</h4>
-				<div class="desc">${bestMoney ? `${escapeHtml(bestMoney.group.name)} • <b>${escapeHtml(bestMoney.job.name)}</b>` : "No jobs unlocked yet."}</div>
+				<div class="desc">${
+				  bestMoney
+					? `${escapeHtml(bestMoney.group.name)} • <b>${escapeHtml(bestMoney.job.name)}</b>`
+					: "No jobs unlocked yet."
+				}</div>
 			  </div>
 			  <div class="card col6" style="margin:0">
 				<h4>Best Rep Job (right now)</h4>
-				<div class="desc">${bestRep ? `${escapeHtml(bestRep.group.name)} • <b>${escapeHtml(bestRep.job.name)}</b>` : "No jobs unlocked yet."}</div>
+				<div class="desc">${
+				  bestRep
+					? `${escapeHtml(bestRep.group.name)} • <b>${escapeHtml(bestRep.job.name)}</b>`
+					: "No jobs unlocked yet."
+				}</div>
 			  </div>
+
 			  <div class="card col12" style="margin:0">
-				<h4>Next Unlock</h4>
+				<h4>Next Job Tier</h4>
 				<div class="desc">${
 				  nextTier
-					? `Next tier: <b>${escapeHtml(nextTier.name)}</b> at <span class="mono">${fmtInt(nextTier.unlock.rep)}</span> Rep — you need <span class="mono">${fmtInt(nextTier.unlock.rep - state.rep)}</span> more.`
-					: "You’ve unlocked all current job tiers."
+					? `Unlock <b>${escapeHtml(nextTier.name)}</b> at <b>${fmt.format(nextTier.unlock?.rep ?? 0)} rep</b>.`
+					: "All job tiers unlocked (for now)."
 				}</div>
 			  </div>
 			</div>
 		  </div>
 
 		  <div class="card col4">
-			<h3>Loadout</h3>
-			<div class="desc">${weapon ? `Equipped: <b>${escapeHtml(weapon.name)}</b>` : "No weapon equipped yet."}</div>
-
-			<div class="hr"></div>
-
-			<h3>Bonuses</h3>
-			<div class="desc">
-			  ${activeBonuses.length ? `${activeBonuses.length} active bonus(es) running.` : "No active bonuses."}
-			</div>
-
-			<div class="hr"></div>
-
-			<h3>Modifiers</h3>
+			<h3>At a Glance</h3>
 			<table class="table">
 			  <tbody>
-				<tr><td>Money bonus</td><td class="right mono">+${Math.round((mods.moneyMult || 0) * 100)}%</td></tr>
-				<tr><td>Rep bonus</td><td class="right mono">+${Math.round((mods.repMult || 0) * 100)}%</td></tr>
-				<tr><td>Heat gain</td><td class="right mono">${Math.round((mods.heatGainMult || 0) * 100)}%</td></tr>
-				<tr><td>Job speed</td><td class="right mono">+${Math.round((mods.jobSpeed || 0) * 100)}%</td></tr>
+				<tr><td>Level</td><td class="right mono" data-bind="level" data-format="int"></td></tr>
+				<tr><td>Influence</td><td class="right mono" data-bind="influence" data-format="int"></td></tr>
+				<tr><td>Crew Slots</td><td class="right mono" data-bind="crewSlots" data-format="int"></td></tr>
+				<tr><td>Upkeep/min</td><td class="right mono" data-bind="upkeepPerMin" data-format="money"></td></tr>
+				<tr><td>Passive/min</td><td class="right mono" data-bind="passivePerMin" data-format="money"></td></tr>
 			  </tbody>
 			</table>
 		  </div>
@@ -1937,6 +1934,7 @@
 
 	  registerBindings(root);
 	}
+
 
 	
 	
