@@ -1647,12 +1647,12 @@
     }
     // ---------- UI ----------
     const PAGES = [
-      { id: "dashboard", name: "Dashboard", icon: "M3 12l9-9 9 9M5 10v10a2 2 0 0 0 2 2h3v-6h4v6h3a2 2 0 0 0 2-2V10" },
-      { id: "jobs", name: "Jobs", icon: "M7 7h10M7 12h10M7 17h10M4 7h.01M4 12h.01M4 17h.01" },
-      { id: "imperium", name: "Imperium", icon: "M12 3l8 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8l8-5Z" },
-      { id: "stats", name: "Stats", icon: "M4 19V5M4 19h16M8 15l2-3 3 2 3-6" },
-	  { id: "howto", name: "How to Play", icon: "M12 6v6l4 2M8 6h8M8 10h8M8 14h5" },
-    ];
+	  { id: "dashboard", name: "Dashboard", icon: "M3 12l9-9 9 9M5 10v10a2 2 0 0 0 2 2h3v-6h4v6h3a2 2 0 0 0 2-2V10" },
+	  { id: "howto", name: "How to Play", icon: "M12 18h.01M12 14a4 4 0 1 0-4-4" },
+	  { id: "jobs", name: "Jobs", icon: "M7 7h10M7 12h10M7 17h10M4 7h.01M4 12h.01M4 17h.01" },
+	  { id: "imperium", name: "Imperium", icon: "M12 3l8 5v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8l8-5Z" },
+	  { id: "stats", name: "Stats", icon: "M4 19V5M4 19h16M8 15l2-3 3 2 3-6" },
+	];
     const IMPERIUM_TABS = [
       { id: "training", name: "Training" },
       { id: "hideout", name: "Hideout" },
@@ -2935,26 +2935,39 @@
 	  registerBindings(root);
 	}
     function renderAll() {
-      renderNav();
-      renderHud();
-      renderActionStrip();
-      const root = document.getElementById("pageRoot");
-      root.innerHTML = "";
-      if (state.ui.page === "dashboard") renderDashboard(root);
-      if (state.ui.page === "jobs") renderJobs(root);
-      if (state.ui.page === "imperium") renderImperium(root);
-      if (state.ui.page === "stats") renderStats(root);
-	  if (state.ui.page === "howto") renderHowTo(root);
-      const ss = document.getElementById("saveState");
-      if (ss) ss.textContent = "Auto";
-      const as = document.getElementById("actionState");
-      if (as) as.textContent = state.action ? state.action.name : "Idle";
-      const js = document.getElementById("jailState");
-      if (js) js.textContent = isJailed() ? `Jailed (${secondsToHMS(jailTimeLeft())})` : "Free";
-      registerBindings(document);
-      updateActionPanelLive();
-      updateCountdownsLive();
-    }
+	  renderNav();
+	  renderHud();
+	  renderActionStrip();
+
+	  const root = document.getElementById("pageRoot");
+	  root.innerHTML = "";
+
+	  // Safety: never allow a blank page due to an unknown saved tab
+	  const valid = new Set(PAGES.map(p => p.id));
+	  if (!valid.has(state.ui.page)) {
+		state.ui.page = "dashboard";
+		saveState();
+	  }
+
+	  if (state.ui.page === "dashboard") renderDashboard(root);
+	  else if (state.ui.page === "howto") renderHowTo(root);
+	  else if (state.ui.page === "jobs") renderJobs(root);
+	  else if (state.ui.page === "imperium") renderImperium(root);
+	  else if (state.ui.page === "stats") renderStats(root);
+
+	  const ss = document.getElementById("saveState");
+	  if (ss) ss.textContent = "Auto";
+
+	  const as = document.getElementById("actionState");
+	  if (as) as.textContent = state.action ? state.action.name : "Idle";
+
+	  const js = document.getElementById("jailState");
+	  if (js) js.textContent = isJailed() ? `Jailed (${secondsToHMS(jailTimeLeft())})` : "Free";
+
+	  registerBindings(document);
+	  updateActionPanelLive();
+	  updateCountdownsLive();
+	}
     // ---------- Hotkeys ----------
     window.addEventListener("keydown", (e) => {
       if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
