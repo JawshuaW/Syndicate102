@@ -805,8 +805,9 @@
 		await tryPlayBgm();
 		setBgmUI({ playing: !bgm.paused, enabled: prefs.enabled, muted: bgm.muted, volume: bgm.volume });
 	  };
-	  window.addEventListener("pointerdown", resumeOnGesture);
-	  window.addEventListener("keydown", resumeOnGesture);
+	  window.addEventListener("pointerdown", resumeOnGesture, { once: true });
+	  window.addEventListener("keydown", resumeOnGesture, { once: true });
+
 
 	  // Controls
 	  bgmUI.play?.addEventListener("click", async () => {
@@ -1120,7 +1121,7 @@
       },
     ];
     // ---------- State ----------
-    const STORAGE_KEY = "neon_underworld_v1";
+    const STORAGE_KEY = "syndicate102_v1";
     const DEFAULT_STATE = () => ({
       v: 1,
       createdAt: now(),
